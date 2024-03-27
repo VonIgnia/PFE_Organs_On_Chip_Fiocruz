@@ -25,9 +25,11 @@ int Saida;
 //double Ti = Setpoint;
 //double Td = 0;
 //double Kp = 0.6 * K, Ki = Ti * 0.5, Kd = 0.125 * Td;
-double Kp = 0.15*PWM_RESOLUTION;
-double Ki = 0.005*PWM_RESOLUTION;
-double Kd = 0.10*PWM_RESOLUTION;
+double Kp = 0.45*PWM_RESOLUTION;
+//double Ki = 0.005*PWM_RESOLUTION;
+double Ki = 0;
+//double Kd = 0.003*PWM_RESOLUTION;
+double Kd = 0;
 
 PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
 
@@ -53,7 +55,7 @@ void setup(void) {
 
   myPID.SetMode(AUTOMATIC);
 
- 
+  analogWrite(TERMAL_PWM, PWM_RESOLUTION);
 
   
 
