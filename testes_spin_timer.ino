@@ -21,21 +21,6 @@ NexTouch *nex_listen_list[] = {
 ;
 
 
-void SWITCH1PopCallback(void *ptr){
-  if (Heating == false){
-    //digitalWrite(luz, HIGH);
-    TEMP1.setText("On");
-    SWITCH1.Set_background_image_pic(4);
-    Heating = true;
-  }
-
-  else{
-    //digitalWrite(luz, LOW);
-    TEMP1.setText("Off");
-    SWITCH1.Set_background_image_pic(3);
-    Heating = false;
-  }
-}
 
 
 
@@ -43,8 +28,7 @@ void SWITCH1PopCallback(void *ptr){
 
 
 
-
-
+const unsigned int TEMP_UPDATE_MILLIS = 1500;
 const unsigned int  CONTROL_MILLIS = 1000;
 const unsigned int DISPLAY_MILLIS = 10;
 
@@ -111,6 +95,28 @@ public:
   }
 };
 
+class TempUpdateAction : public SpinTimerAction
+{
+public:
+  void timeExpired()
+  {
+    char buffer[10];
+    sensors_event_t temp; // create an empty event to be filled
+    tmp117.getEvent(&temp);
+    double temperatura = temp.temperature;
+    dtostrf(temperatura,4,2,buffer);
+    const char* Value = buffer;
+    TEMP1.setText(Value);
+  }
+};
+
+
+
+
+
+
+
+
 
 void setup(void) {
   Serial.begin(115200);
@@ -138,6 +144,7 @@ void setup(void) {
 
   new SpinTimer(CONTROL_MILLIS, new ControlAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
   new SpinTimer(DISPLAY_MILLIS, new DisplayAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
+  new SpinTimer(TEMP_UPDATE_MILLIS, new TempUpdateAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
   
 
   
@@ -149,3 +156,23 @@ void loop() {
   
   
 }
+
+
+void SWITCH1PopCallback(void *ptr){
+  
+  if (Heating == false){
+    
+    
+    SWITCH1.Set_background_image_pic(4);
+    Heating = true;
+  }
+
+  else{
+    
+    
+    SWITCH1.Set_background_image_pic(3);
+    Heating = false;
+  }
+}
+
+
