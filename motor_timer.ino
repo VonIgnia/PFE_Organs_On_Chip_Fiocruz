@@ -1,11 +1,14 @@
 #include <Wire.h>
 #include <SpinTimer.h>
+#include <Adafruit_TMP117.h>
+#include <Adafruit_Sensor.h>
 #include "Nextion.h"
 
 HardwareSerial Serial1(PC11,PC10);
 
 const unsigned int MOTOR_MILLIS = 5;
 const unsigned int DISPLAY_MILLIS = 1;
+const unsigned int CONTROL_MILLIS = 1000;
 
 int config = 2;
 
@@ -19,6 +22,8 @@ NexButton decremento2 = NexButton(config, 12, "b5");
 NexText vazao2_text = NexText(config, 21, "t11");
 NexButton habilita_seringa2 = NexButton(config, 25, "b7");
 
+NexText TEMP1 = NexText(config, 4, "t2");
+
 
 
 NexTouch *nex_listen_list[] = {
@@ -31,6 +36,11 @@ NexTouch *nex_listen_list[] = {
     NULL
   };
 ;
+
+
+Adafruit_TMP117  tmp117;
+
+
 
 // Definindo as portas a serem utilizadas para o fuso 1 e os seus respectivos nomes
 const int clk_pos_1 = D9;
@@ -77,6 +87,7 @@ bool seringa2_hab = 0;
 
 
 char buffer[10];
+char buffer2[10];
 
 class MotorAction : public SpinTimerAction
 {
@@ -128,12 +139,35 @@ public:
 };
 
 
+class ControlAction : public SpinTimerAction
+{
+public:
+  void timeExpired()
+  {
+    
+    sensors_event_t temp; // create an empty event to be filled
+    tmp117.getEvent(&temp);
+    double temperatura = temp.temperature;
+    dtostrf(temperatura,3,1,buffer2);
+    const char* Value = buffer2;
+    TEMP1.setText(Value);
+  }
+};
+
+
+
+
+
+
+
+
 
 
 
 void setup() {
  
   Serial.begin(9600);
+  
 
   // Configurando os pinos do Fuso 1 como entradas ou saídas
   pinMode(clk_pos_1, OUTPUT); 
@@ -151,6 +185,7 @@ void setup() {
   pinMode(fdc_sup_2, INPUT); 
   pinMode(fdc_inf_2, INPUT);
   nexInit();
+  tmp117.begin();
   incremento1.attachPop(incremento1PopCallback, &incremento1);
   decremento1.attachPop(decremento1PopCallback, &decremento1);
   incremento2.attachPop(incremento2PopCallback, &incremento2);
@@ -207,7 +242,7 @@ void setup() {
 
   new SpinTimer(MOTOR_MILLIS, new MotorAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
   new SpinTimer(DISPLAY_MILLIS, new DisplayAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
-
+  new SpinTimer(CONTROL_MILLIS, new ControlAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
 }
 
 void loop() {
