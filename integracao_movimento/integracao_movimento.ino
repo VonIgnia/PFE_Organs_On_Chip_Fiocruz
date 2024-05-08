@@ -46,23 +46,24 @@ Adafruit_TMP117  tmp117;
 
 
 // Definindo as portas a serem utilizadas para o fuso 1 e os seus respectivos nomes
-const int clk_pos_1 = D9;
-const int cw_pos_1 = D3;
-const int en_pos_1 = D4;
-const int ligar_motor_1 = D5;
-const int fdc_sup_1 = D6;
-const int fdc_inf_1 = D7;
+const int clk_pos_1 = PC2;
+const int cw_pos_1 = PC3;
+const int en_pos_1 = PC1;
+const int ligar_motor_1 = PC0;
+//bool ligar_motor_1 = HIGH;
+const int fdc_sup_1 = PC7;
+const int fdc_inf_1 = PB6;
 
 // Definindo as portas a serem utilizadas para o fuso 2 e os seus respectivos nomes
-const int clk_pos_2 = A5;
-const int cw_pos_2 = A4;
-const int en_pos_2 = D10;
-const int ligar_motor_2 = D11;
-const int fdc_sup_2 = D12;
-const int fdc_inf_2 = A0;
+const int clk_pos_2 = PA4;
+const int cw_pos_2 = PB0;
+const int en_pos_2 = PA0;
+const int ligar_motor_2 = PA1;
+const int fdc_sup_2 = PA7;
+const int fdc_inf_2 = PA6;
 
 // Definindo demais variáveis para o fuso 1
-float vazao_1 = 10;
+float vazao_1 = 300;
 float passos_1 = 0;
 float tempo_1 = 0;
 float intervalo_1 = 0;
@@ -70,7 +71,7 @@ float contador_tempo_1 = 0;
 float contador_passos_1 = 0;
 
 // Definindo demais variáveis para o fuso 2
-float vazao_2 = 10;
+float vazao_2 = 600;
 float passos_2 = 0;
 float tempo_2 = 0;
 float intervalo_2 = 0;
@@ -97,8 +98,12 @@ char buffer2[10];
 class MotorAction : public SpinTimerAction
 {
 public:
-  void timeExpired()
-  {
+  void timeExpired(){
+    digitalWrite(ligar_motor_1,HIGH);
+    digitalWrite(ligar_motor_2,HIGH);
+    digitalWrite(cw_pos_1, HIGH);//descendo
+    digitalWrite(cw_pos_2, HIGH);//descendo
+
     if( AUTO == 0){
       passos_1 = vazao_1 / 0.03125;
       tempo_1 = 3600000.0 / (2.0 * passos_1);
@@ -106,29 +111,30 @@ public:
       passos_2 = vazao_2 / 0.03125;
       tempo_2 = 3600000.0 / (2.0 * passos_2);
       intervalo_2 = 3600000.0 / passos_2;
-
-      
-
     }
-
+    
     if(AUTO == 1){
       agora1 = millis();
       if(agora1-antes1 >= tempo_1){
         antes1 = agora1;
-        digitalWrite(en_pos_1, HIGH);
-        digitalWrite(clk_pos_1, !digitalRead(clk_pos_1)); 
-        digitalWrite(en_pos_1, LOW);
+        //Serial.println("Passo_MOTOR1"); ok
+        digitalWrite(en_pos_1, LOW); //enable pra rodar tem que ser LOW
+        
+        digitalWrite(clk_pos_1, !digitalRead(clk_pos_1));
+        //Serial.println(vazao_1); Para checar se vazao vinha do código ou do display, vinha do código. 
+        //digitalWrite(en_pos_1, HIGH);
         contador_passos_1++;
       }
       agora2 = millis();
       if(agora2-antes2 >= tempo_2){
         antes2 = agora2;
-        digitalWrite(en_pos_2, HIGH);
-        digitalWrite(clk_pos_2, !digitalRead(clk_pos_2)); 
+        //Serial.println("Passo_MOTOR2"); ok
         digitalWrite(en_pos_2, LOW);
+        digitalWrite(clk_pos_2, !digitalRead(clk_pos_2));
+        //Serial.println(vazao_2); Para checar se vazao vinha do código ou do display, vinha do código.
+        //digitalWrite(en_pos_2, HIGH);
         contador_passos_2++;
       }
-
     }
 
   }
@@ -179,16 +185,22 @@ void setup() {
   // Configurando os pinos do Fuso 1 como entradas ou saídas
   pinMode(clk_pos_1, OUTPUT); 
   pinMode(cw_pos_1, OUTPUT); 
-  pinMode(en_pos_1, OUTPUT); 
-  pinMode(ligar_motor_1, INPUT); 
+  pinMode(en_pos_1, OUTPUT);
+   
+  pinMode(ligar_motor_1, OUTPUT);
+  digitalWrite(ligar_motor_1, HIGH);
+
   pinMode(fdc_sup_1, INPUT); 
   pinMode(fdc_inf_1, INPUT); 
 
   // Configurando os pinos do Fuso 2 como entradas ou saídas
   pinMode(clk_pos_2, OUTPUT); 
   pinMode(cw_pos_2, OUTPUT); 
-  pinMode(en_pos_2, OUTPUT); 
-  pinMode(ligar_motor_2, INPUT); 
+  pinMode(en_pos_2, OUTPUT);
+
+  pinMode(ligar_motor_2, OUTPUT);
+  digitalWrite(ligar_motor_2, HIGH);
+
   pinMode(fdc_sup_2, INPUT); 
   pinMode(fdc_inf_2, INPUT);
   nexInit();
@@ -199,7 +211,7 @@ void setup() {
   decremento2.attachPop(decremento2PopCallback, &decremento2);
   habilita_seringa1.attachPush(habilita_seringa1PushCallback, &habilita_seringa1);
   habilita_seringa2.attachPush(habilita_seringa2PushCallback, &habilita_seringa2);
-  ligar_auto.attachPush(ligar_autoPushCallback, &ligar_auto);
+  ligar_auto.attachPush(ligar_autoPushCallback, &ligar_auto); //apertar "Iniciar Experimento"
 
 
 
@@ -266,21 +278,26 @@ void incremento2PopCallback(void *ptr){
 }
 
 void habilita_seringa1PushCallback(void *ptr){
+  //Serial.println("Habilitou Seringa 1");
   if(seringa1_hab == 0 && referenciado_1 == 0){
-  
+    //Serial.println("Entrou no IF");
     habilita_seringa1.Set_background_image_pic(5);
     
     
+    while (referenciado_1 == 0){
     while (digitalRead(fdc_sup_1) == HIGH) {
+    //Serial.println("Entrou no while"); - chegou aqui ok
     digitalWrite(cw_pos_1, LOW);
       if (digitalRead(ligar_motor_1) == HIGH) {
+        digitalWrite(en_pos_1, LOW);
+        //Serial.println("move motor"); chegou ok mas não está movendo o motor
         digitalWrite(clk_pos_1, LOW);
         delayMicroseconds(300);
         digitalWrite(clk_pos_1, HIGH);
         delayMicroseconds(300);
   }
-  
 }
+
     digitalWrite(cw_pos_1, HIGH);
     for (int i = 0; i <= 12800; i++){
       digitalWrite(clk_pos_1, LOW);
@@ -288,8 +305,10 @@ void habilita_seringa1PushCallback(void *ptr){
       digitalWrite(clk_pos_1, HIGH);
       delayMicroseconds(300);
     }
-
     referenciado_1 = 1;
+    digitalWrite(ligar_motor_1, LOW);
+    }
+
     seringa1_hab = 1;
 
 }
@@ -311,10 +330,11 @@ void habilita_seringa2PushCallback(void *ptr){
  
   habilita_seringa2.Set_background_image_pic(5);
 
-  
+  while (referenciado_2 == 0){
   while (digitalRead(fdc_sup_2) == HIGH) {
     digitalWrite(cw_pos_2, LOW);
   if (digitalRead(ligar_motor_2) == HIGH) {
+    digitalWrite(en_pos_2, LOW);
     digitalWrite(clk_pos_2, LOW);
     delayMicroseconds(300);
     digitalWrite(clk_pos_2, HIGH);
@@ -329,9 +349,10 @@ void habilita_seringa2PushCallback(void *ptr){
     digitalWrite(clk_pos_2, HIGH);
     delayMicroseconds(300);
   }
-
-
   referenciado_2 = 1;
+  digitalWrite(ligar_motor_2, LOW);
+  }
+
   seringa2_hab = 1;
 }
 
