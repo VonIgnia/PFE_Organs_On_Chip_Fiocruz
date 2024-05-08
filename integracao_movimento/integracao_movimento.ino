@@ -99,8 +99,12 @@ class MotorAction : public SpinTimerAction
 {
 public:
   void timeExpired(){
-    digitalWrite(ligar_motor_1,HIGH);
-    digitalWrite(ligar_motor_2,HIGH);
+    if (seringa1_hab == 1){
+    digitalWrite(ligar_motor_1,HIGH);}
+
+    if (seringa2_hab == 1){
+    digitalWrite(ligar_motor_2,HIGH);}
+
     digitalWrite(cw_pos_1, HIGH);//descendo
     digitalWrite(cw_pos_2, HIGH);//descendo
 
@@ -115,7 +119,7 @@ public:
     
     if(AUTO == 1){
       agora1 = millis();
-      if(agora1-antes1 >= tempo_1){
+      if(agora1-antes1 >= tempo_1 && seringa1_hab == 1){
         antes1 = agora1;
         //Serial.println("Passo_MOTOR1"); ok
         digitalWrite(en_pos_1, LOW); //enable pra rodar tem que ser LOW
@@ -126,7 +130,7 @@ public:
         contador_passos_1++;
       }
       agora2 = millis();
-      if(agora2-antes2 >= tempo_2){
+      if(agora2-antes2 >= tempo_2 && seringa2_hab == 1){
         antes2 = agora2;
         //Serial.println("Passo_MOTOR2"); ok
         digitalWrite(en_pos_2, LOW);
