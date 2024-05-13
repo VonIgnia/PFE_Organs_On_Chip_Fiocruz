@@ -16,39 +16,39 @@ const unsigned int CONTROL_MILLIS = 1000;
 
 //Variáveis da tela de controle manual
 int conman = 2;
-    NexButton habilita_seringa1 = NexButton(conman, 22, "b4");
+    NexButton habilita_seringa1 = NexButton(conman, 11, "b8");
     NexButton referencia_seringa1 = NexButton(conman 7, "b3");
     NexButton sobe1 = NexButton(conman, 9, "b1");
     NexButton desce1 = NexButton(conman, 8, "b0");
 
-    NexButton habilita_seringa2 = NexButton(conman, 23, "b7");
-    NexButton referencia_seringa2 = NexButton(conman, 8, "b1");
+    NexButton habilita_seringa2 = NexButton(conman, 12, "b9");
+    NexButton referencia_seringa2 = NexButton(conman, 8, "b7");
     NexButton sobe2 = NexButton(conman, 11, "b6");
     NexButton desce2 = NexButton(conman, 10, "b5");
 
-    NexPicture habilitado_1 = NexPicture(conman,,);
-    NexPicture habilitado_2 = NexPicture(conman,,);
-    NexPicture referenciado_1 = NexPicture(conman,,);
-    NexPicture referenciado_2 = NexPicture(conman,,);
+    NexPicture habilitado_1 = NexPicture(conman,16,"p2");
+    NexPicture habilitado_2 = NexPicture(conman,22,"p0");
+    NexPicture referenciado_1 = NexPicture(conman,17,"p3");
+    NexPicture referenciado_2 = NexPicture(conman,23,"p1");
     //NexButton ligar_auto = NexButton(conman, 12, "b2");
 
 //Variáveis da tela de configurar experimento
 int configexp = 3;
-    NexButton play = NexButton(configexp, 22, "b4");
-    NexButton pause = NexButton(configexp, 22, "b4");
+    NexButton play = NexButton(configexp, 20, "b3");
+    NexButton pause = NexButton(configexp, 21, "b4");
 
-    NexButton incremento1 = NexButton(configexp, 22, "b4");
-    NexButton decremento1 = NexButton(configexp, 22, "b4");
-    NexText vazao1_text = NexText(configexp, 22, "b4");
+    NexButton incremento1 = NexButton(configexp, 8, "b1");
+    NexButton decremento1 = NexButton(configexp, 7, "b0");
+    NexText vazao1_text = NexText(configexp, 5, "t9");
     
-    NexButton incremento2 = NexButton(configexp, 22, "b4");
-    NexButton decremento2 = NexButton(configexp, 22, "b4");
-    NexText vazao2_text = NexText(configexp, 22, "b4");
+    NexButton incremento2 = NexButton(configexp, 10, "b6");
+    NexButton decremento2 = NexButton(configexp, 9, "b5");
+    NexText vazao2_text = NexText(configexp, 15, "t11");
 
-    NexText temp_chip = NexText(configexp, 22, "b4");
-    NexText temp_chamber = NexText(configexp, 22, "b4");
+    NexText temp_chip = NexText(configexp, 19, "t2");
+    NexText temp_chamber = NexText(configexp, 14, "t4");
 
-    NexPicture operando = NexPicture(conman,,);
+    NexPicture operando = NexPicture(configexp,23,"p4");
 
 //Listen-list do nextion
 NexTouch *nex_listen_list[] = {
@@ -327,101 +327,257 @@ void loop() {
 }
 
 //Callbacks da tela de configuração de experimento
-    void habilita_seringa1PopCallback(void *ptr) {
+void habilita_seringa1PopCallback(void *ptr) {
         // Implementação para o callback habilita_seringa1PopCallback
+        //Serial.println("Habilitou Seringa 1");
+        if(seringa1_hab == 0 && referenciado_1 == 0){
+            habilita_seringa1.Set_background_image_pic(5);
+            
+            while (referenciado_1 == 0){
+                while (digitalRead(fdc_sup_1) == HIGH) {
+                digitalWrite(cw_pos_1, LOW);
+                digitalWrite(ligar_motor_1, HIGH);
+                
+                digitalWrite(en_pos_1, LOW);
+                digitalWrite(clk_pos_1, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_1, HIGH);
+                delayMicroseconds(300);
+                }
+
+                digitalWrite(cw_pos_1, HIGH);
+                for (int i = 0; i <= 12800; i++){
+                digitalWrite(clk_pos_1, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_1, HIGH);
+                delayMicroseconds(300);
+                }
+                digitalWrite(ligar_motor_1, LOW);
+                digitalWrite(en_pos_1, HIGH);
+                referenciado_1 = 1;
+            }
+            seringa1_hab = 1;
+        }
+
+        else if(seringa1_hab == 0 && referenciado_1 == 1){
+            habilita_seringa1.Set_background_image_pic(5);
+            seringa1_hab = 1;
+        }
+
+        else {
+            habilita_seringa1.Set_background_image_pic(4);
+            seringa1_hab = 0;
+        }
+
     }
 
     void referencia_seringa1PopCallback(void *ptr) {
         // Implementação para o callback referencia_seringa1PopCallback
-    }
-
-    void sobe1PopCallback(void *ptr) {
-        // Implementação para o callback sobe1PopCallback
-    }
-
-    void desce1PopCallback(void *ptr) {
-        // Implementação para o callback desce1PopCallback
-    }
-
-    void habilita_seringa2PopCallback(void *ptr) {
-        // Implementação para o callback habilita_seringa2PopCallback
-    }
-
-    void referencia_seringa2PopCallback(void *ptr) {
-        // Implementação para o callback referencia_seringa2PopCallback
-    }
-
-    void sobe2PopCallback(void *ptr) {
-        // Implementação para o callback sobe2PopCallback
-    }
-
-    void desce2PopCallback(void *ptr) {
-        // Implementação para o callback desce2PopCallback
-    }
-
-//Calbacks tela 2
-    void playPopCallback(void *ptr) {
-        //inicia a operação automática do experimento
-        AUTO = 1;
-    }
-
-    void pausePopCallback(void *ptr) {
-        //pausa a operação automática do experimento
-        AUTO = 0;
-    }
-
-    void incremento1PopCallback(void *ptr) {
-        if (seringa1_hab) {
-            vazao_1++;
+        referenciado_1 = 0;
+        if seringa1_hab{
+        while (referenciado_1 == 0){
+            while (digitalRead(fdc_sup_1) == HIGH) {
+            //Serial.println("Entrou no while"); - chegou aqui ok
+            digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
+            digitalWrite(ligar_motor_1, HIGH);
             
-            if (vazao_1 > 100) {
-                vazao_1 = 100;
-                }
-            
-            dtostrf(vazao_1, 2, 0, buffer);
-            const char* valor_vazao1 = buffer;
-            vazao1_text.setText(valor_vazao1);
-            }
-    }
-
-    void decremento1PopCallback(void *ptr) {
-        if (seringa1_hab) {
-            vazao_1--;
-            
-            if (vazao_1 < 0) {
-                vazao_1 = 0;
-                }
-            
-            dtostrf(vazao_1, 2, 0, buffer);
-            const char* valor_vazao1 = buffer;
-            vazao1_text.setText(valor_vazao1);
-            }
-    }
-
-    void incremento2PopCallback(void *ptr) {
-        if(seringa2_hab){
-        vazao_2 ++;
+            digitalWrite(en_pos_1, LOW);
+            //Serial.println("move motor"); chegou ok mas não está movendo o motor
+            digitalWrite(clk_pos_1, LOW);
+            delayMicroseconds(300);
+            digitalWrite(clk_pos_1, HIGH);
+            delayMicroseconds(300);
         
-            if(vazao_2 > 100){
-                vazao_2 = 100;
-                }
-            dtostrf(vazao_2, 2, 0, buffer);
-            const char* valor_vazao2 = buffer;
-            vazao2_text.setText(valor_vazao2);
-            }
-    }
+        }
 
-    void decremento2PopCallback(void *ptr) {
-        if (seringa2_hab) {
-            vazao_2--;
-            
-            if (vazao_2 < 0) {
-                vazao_2 = 0;
+            digitalWrite(cw_pos_1, HIGH);
+            for (int i = 0; i <= 12800; i++){
+            digitalWrite(clk_pos_1, LOW);
+            delayMicroseconds(300);
+            digitalWrite(clk_pos_1, HIGH);
+            delayMicroseconds(300);
             }
             
-            dtostrf(vazao_2, 2, 0, buffer);
-            const char* valor_vazao2 = buffer;
-            vazao2_text.setText(valor_vazao2);
+            digitalWrite(ligar_motor_1, LOW);
+            digitalWrite(en_pos_1, HIGH);
+            referenciado_1 = 1;
+            }
         }
     }
+
+void incremento1_conmanPushCallback(void *ptr){
+    while (digitalRead(fdc_sup_1) == HIGH) {
+
+        //Serial.println("Entrou no while"); - chegou aqui ok
+          digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
+          digitalWrite(ligar_motor_1, HIGH);
+          
+          digitalWrite(en_pos_1, LOW);
+          //Serial.println("move motor"); chegou ok mas não está movendo o motor
+          digitalWrite(clk_pos_1, LOW);
+          delayMicroseconds(300);
+          digitalWrite(clk_pos_1, HIGH);
+          delayMicroseconds(300);
+      
+    }
+}
+
+void sobe1PopCallback(void *ptr) {
+    // Implementação para o callback sobe1PopCallback
+}
+
+void desce1PopCallback(void *ptr) {
+    // Implementação para o callback desce1PopCallback
+}
+
+void habilita_seringa2PopCallback(void *ptr) {
+    // Implementação para o callback habilita_seringa2PopCallback
+    if(seringa2_hab == 0 && referenciado_2 == 0){
+        habilita_seringa2.Set_background_image_pic(5);
+
+        while (referenciado_2 == 0){
+            while (digitalRead(fdc_sup_2) == HIGH) {
+                digitalWrite(cw_pos_2, LOW);
+                digitalWrite(ligar_motor_2, HIGH);
+            
+                digitalWrite(en_pos_2, LOW);
+                digitalWrite(clk_pos_2, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_2, HIGH);
+                delayMicroseconds(300);
+            
+            }
+
+            digitalWrite(cw_pos_2, HIGH);
+            for (int i = 0; i <= 12800; i++){
+                digitalWrite(clk_pos_2, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_2, HIGH);
+                delayMicroseconds(300);
+            }
+            
+            digitalWrite(ligar_motor_2, LOW);
+            digitalWrite(en_pos_2, HIGH);
+            referenciado_2 = 1;
+        }
+        seringa2_hab = 1;
+    }
+
+    else if(seringa2_hab == 0 && referenciado_2 == 1){
+        habilita_seringa2.Set_background_image_pic(5);
+        seringa2_hab = 1;
+    }
+
+    else{
+        
+        habilita_seringa2.Set_background_image_pic(4);
+        seringa2_hab = 0;
+    }
+}
+
+void referencia_seringa2PopCallback(void *ptr) {
+    // Implementação para o callback referencia_seringa2PopCallback
+    referenciado_2 = 0;
+        if (seringa2_hab){
+            while (referenciado_2 == 0){
+                while (digitalRead(fdc_sup_2) == HIGH) {
+                    digitalWrite(cw_pos_2, LOW);
+                    digitalWrite(ligar_motor_2, HIGH);
+                    
+                    digitalWrite(en_pos_2, LOW);
+                    
+                    digitalWrite(clk_pos_2, LOW);
+                    delayMicroseconds(300);
+                    digitalWrite(clk_pos_2, HIGH);
+                    delayMicroseconds(300);
+                }
+
+                digitalWrite(cw_pos_2, HIGH);
+                for (int i = 0; i <= 12800; i++){
+                    digitalWrite(clk_pos_2, LOW);
+                    delayMicroseconds(300);
+                    digitalWrite(clk_pos_2, HIGH);
+                    delayMicroseconds(300);
+                }
+                
+                digitalWrite(ligar_motor_2, LOW);
+                digitalWrite(en_pos_2, HIGH);
+                referenciado_2 = 1;
+        }
+    }
+}
+
+void sobe2PopCallback(void *ptr) {
+    // Implementação para o callback sobe2PopCallback
+}
+
+void desce2PopCallback(void *ptr) {
+    // Implementação para o callback desce2PopCallback
+}
+
+//Calbacks tela 2
+void playPopCallback(void *ptr) {
+    //inicia a operação automática do experimento
+    AUTO = 1;
+}
+
+void pausePopCallback(void *ptr) {
+    //pausa a operação automática do experimento
+    AUTO = 0;
+}
+
+void incremento1PopCallback(void *ptr) {
+    if (seringa1_hab) {
+        vazao_1++;
+        
+        if (vazao_1 > 100) {
+            vazao_1 = 100;
+            }
+        
+        dtostrf(vazao_1, 2, 0, buffer);
+        const char* valor_vazao1 = buffer;
+        vazao1_text.setText(valor_vazao1);
+        }
+}
+
+void decremento1PopCallback(void *ptr) {
+    if (seringa1_hab) {
+        vazao_1--;
+        
+        if (vazao_1 < 0) {
+            vazao_1 = 0;
+            }
+        
+        dtostrf(vazao_1, 2, 0, buffer);
+        const char* valor_vazao1 = buffer;
+        vazao1_text.setText(valor_vazao1);
+        }
+}
+
+void incremento2PopCallback(void *ptr) {
+    if(seringa2_hab){
+    vazao_2 ++;
+    
+        if(vazao_2 > 100){
+            vazao_2 = 100;
+            }
+        dtostrf(vazao_2, 2, 0, buffer);
+        const char* valor_vazao2 = buffer;
+        vazao2_text.setText(valor_vazao2);
+        }
+}
+
+void decremento2PopCallback(void *ptr) {
+    if (seringa2_hab) {
+        vazao_2--;
+        
+        if (vazao_2 < 0) {
+            vazao_2 = 0;
+        }
+        
+        dtostrf(vazao_2, 2, 0, buffer);
+        const char* valor_vazao2 = buffer;
+        vazao2_text.setText(valor_vazao2);
+    }
+}
 
