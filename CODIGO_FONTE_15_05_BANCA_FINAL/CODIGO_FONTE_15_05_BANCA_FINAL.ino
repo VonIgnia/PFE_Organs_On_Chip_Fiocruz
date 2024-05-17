@@ -48,7 +48,7 @@ NexText vazao2_text = NexText(configexp, 15, "vaz2");
 
 NexText temp_chip = NexText(configexp, 19, "tempchip");
 NexText temp_chamber = NexText(configexp, 14, "tempcam");
-
+NexPicture em_operacao = NexPicture(configexp,23,"op1");
 
 //Listen-list do nextion
 NexTouch *nex_listen_list[] = {
@@ -347,31 +347,31 @@ void habilita_seringa1PopCallback(void *ptr) {
         if (seringa1_hab){
         while (referenciado_1 == 0){
             while (digitalRead(fdc_sup_1) == HIGH) {
-            //Serial.println("Entrou no while"); - chegou aqui ok
-            digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
-            digitalWrite(ligar_motor_1, HIGH);
-            
-            digitalWrite(en_pos_1, LOW);
-            //Serial.println("move motor"); chegou ok mas não está movendo o motor
-            digitalWrite(clk_pos_1, LOW);
-            delayMicroseconds(300);
-            digitalWrite(clk_pos_1, HIGH);
-            delayMicroseconds(300);
-        
-        }
+                //Serial.println("Entrou no while"); - chegou aqui ok
+                digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
+                digitalWrite(ligar_motor_1, HIGH);
+                
+                digitalWrite(en_pos_1, LOW);
+                //Serial.println("move motor"); chegou ok mas não está movendo o motor
+                digitalWrite(clk_pos_1, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_1, HIGH);
+                delayMicroseconds(300);
+            }
 
             digitalWrite(cw_pos_1, HIGH);
             for (int i = 0; i <= 12800; i++){
-            digitalWrite(clk_pos_1, LOW);
-            delayMicroseconds(300);
-            digitalWrite(clk_pos_1, HIGH);
-            delayMicroseconds(300);
+                digitalWrite(clk_pos_1, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_1, HIGH);
+                delayMicroseconds(300);
             }
             
             digitalWrite(ligar_motor_1, LOW);
             digitalWrite(en_pos_1, HIGH);
             referenciado_1 = 1;
             }
+        referenciado_1_pic.Set_background_image_pic(16);
         }
     }
 
@@ -390,12 +390,14 @@ void habilita_seringa2PopCallback(void *ptr) {
     if(seringa2_hab == 0 ){
         habilita_seringa2.Set_background_image_pic(5);
         seringa2_hab = 1;
+        habilitado_2.Set_background_image_pic(18);
     }
 
     else{
         
         habilita_seringa2.Set_background_image_pic(4);
         seringa2_hab = 0;
+        habilitado_2.Set_background_image_pic(17);
     }
 }
 
@@ -427,7 +429,8 @@ void referencia_seringa2PopCallback(void *ptr) {
                 digitalWrite(ligar_motor_2, LOW);
                 digitalWrite(en_pos_2, HIGH);
                 referenciado_2 = 1;
-        }
+            }
+        referenciado_2_pic.Set_background_image_pic(16);
     }
 }
 
@@ -443,11 +446,13 @@ void desce2PopCallback(void *ptr) {
 void playPopCallback(void *ptr) {
     //inicia a operação automática do experimento
     AUTO = 1;
+    em_operacao.Set_background_image_pic(14);
 }
 
 void pausePopCallback(void *ptr) {
     //pausa a operação automática do experimento
     AUTO = 0;
+    em_operacao.Set_background_image_pic(13);
 }
 
 void incremento1PopCallback(void *ptr) {
