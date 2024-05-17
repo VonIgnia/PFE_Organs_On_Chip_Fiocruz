@@ -4,6 +4,7 @@
 #include <Adafruit_Sensor.h>
 #include "Nextion.h"
 
+//Portas RX e TX, respectivamente nas quais o display está conectado com a placa núcleo
 HardwareSerial Serial1(PC11,PC10);
 
 #define PWM_RESOLUTION 65535
@@ -12,20 +13,17 @@ const unsigned int MOTOR_MILLIS = 5;
 const unsigned int DISPLAY_MILLIS = 1;
 const unsigned int CONTROL_MILLIS = 1000;
 
+//Variáveis da tela de configurar experimento
 int config = 2;
-int init_exp = 3;
-int control =4;
 
-NexButton decremento1 = NexButton(config, 8, "b0");
 NexButton incremento1 = NexButton(config, 9, "b1");
+NexButton decremento1 = NexButton(config, 8, "b0");
 NexText vazao1_text = NexText(config, 6, "t9");
-NexText vazao1_text_exp = NexText(init_exp, 6, "t9");
 NexButton habilita_seringa1 = NexButton(config, 22, "b4");
 
 NexButton incremento2 = NexButton(config, 11, "b6");
 NexButton decremento2 = NexButton(config, 10, "b5");
 NexText vazao2_text = NexText(config, 19, "t11");
-NexText vazao2_text_exp = NexText(init_exp, 19, "t11");
 NexButton habilita_seringa2 = NexButton(config, 23, "b7");
 
 NexText TEMP1 = NexText(config, 26, "t2");
@@ -33,9 +31,26 @@ NexText TEMP2 = NexText(config, 18, "t4");
 
 NexButton ligar_auto = NexButton(config, 12, "b2");
 
+//Variáveis da tela de iniciar e monitorar o experimento
+int init_exp = 3;
+
+NexText vazao1_text_exp = NexText(init_exp, 6, "t9");
+NexText vazao2_text_exp = NexText(init_exp, 19, "t11");
+
+//Variáveis da tela de controle manual
+int control =4;
+
+NexButton referencia_seringa1 = NexButton(control, 7, "b3");
+NexButton incremento1_conman = NexButton(control, 3, "b1");
+NexButton decremento1_conman = NexButton(control, 4, "b0");
+
+NexButton referencia_seringa2 = NexButton(control, 8, "b1");
+NexButton incremento2_conman = NexButton(control, 5, "b6");
+NexButton decremento2_conman = NexButton(control, 6, "b5");
 
 
 NexTouch *nex_listen_list[] = {
+  //configuração
     &decremento1,
     &incremento1,
     &habilita_seringa1,
@@ -43,6 +58,16 @@ NexTouch *nex_listen_list[] = {
     &incremento2,
     &habilita_seringa2,
     &ligar_auto,
+
+    //iniciar/monitorar
+
+    //controle manual
+    &referencia_seringa1,
+    &incremento1_conman,
+    &decremento1_conman,
+    &referencia_seringa2,
+    &incremento2_conman,
+    &decremento2_conman,
     NULL
   };
 ;
@@ -72,19 +97,13 @@ const int fdc_inf_2 = PA6;
 
 //pino do aquecedor
 const int TERMAL_PWM = PB3;
-//Variaveis de controle
+//Variaveis de controle do aquecimento
 unsigned long tempo;
-
 float a = -1.0/120000.0;
-
 float h = 1200;
-
 float k = 37;
-
 float Setpoint = 25.0;
-
 float start;
-
 double Output = 0;
 
 
@@ -121,7 +140,6 @@ bool seringa2_hab = 0;
 bool referenciado_1 = 0;
 bool referenciado_2 = 0;
 
-
 char buffer[10];
 char buffer2[10];
 char buffer3[10];
@@ -149,8 +167,6 @@ public:
       intervalo_2 = 3600000.0 / passos_2;
 
     }
-
-    
     
     if(AUTO == 1){
       agora1 = millis();
@@ -290,6 +306,8 @@ void setup() {
   nexInit();
   tmp117.begin(0x48);
   tmp117_monitor.begin(0x49);
+
+  //Attachs da tela de configuração de experimento
   incremento1.attachPop(incremento1PopCallback, &incremento1);
   decremento1.attachPop(decremento1PopCallback, &decremento1);
   incremento2.attachPop(incremento2PopCallback, &incremento2);
@@ -299,21 +317,25 @@ void setup() {
   ligar_auto.attachPush(ligar_autoPushCallback, &ligar_auto); //apertar "Iniciar Experimento"
 
 
+  //Attachs da tela de controle manual
+  referencia_seringa1.attachPush(referencia_seringa1PushCallback, &referencia_seringa1);
+  incremento1_conman.attachPush(incremento1_conmanPushCallback, &incremento1_conman);
+  decremento1_conman.attachPush(decremento1_conmanPushCallback, &decremento1_conman);
+  referencia_seringa2.attachPush(referencia_seringa2PushCallback, &referencia_seringa2);
+  incremento2_conman.attachPush(incremento2_conmanPushCallback, &incremento2_conman);
+  decremento2_conman.attachPush(decremento2_conmanPushCallback, &decremento2_conman);
 
-
+  //ligando os SpinTimers
   new SpinTimer(MOTOR_MILLIS, new MotorAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
   new SpinTimer(DISPLAY_MILLIS, new DisplayAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
   new SpinTimer(CONTROL_MILLIS, new ControlAction(), SpinTimer::IS_RECURRING, SpinTimer::IS_AUTOSTART);
 
   digitalWrite(ligar_motor_1, LOW);
   digitalWrite(ligar_motor_2, LOW);
-
-
 }
 
 void loop() {
   scheduleTimers();
-
 }
 
 
@@ -472,5 +494,98 @@ void ligar_autoPushCallback(void *ptr){
   
   AUTO = 1;
   
+}
+
+void referencia_seringa1PushCallback(void *ptr){
+    referenciado_1 = 0;
+    if seringa1_hab{
+      while (referenciado_1 == 0){
+        while (digitalRead(fdc_sup_1) == HIGH) {
+        //Serial.println("Entrou no while"); - chegou aqui ok
+          digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
+          digitalWrite(ligar_motor_1, HIGH);
+          
+          digitalWrite(en_pos_1, LOW);
+          //Serial.println("move motor"); chegou ok mas não está movendo o motor
+          digitalWrite(clk_pos_1, LOW);
+          delayMicroseconds(300);
+          digitalWrite(clk_pos_1, HIGH);
+          delayMicroseconds(300);
+      
+    }
+
+        digitalWrite(cw_pos_1, HIGH);
+        for (int i = 0; i <= 12800; i++){
+          digitalWrite(clk_pos_1, LOW);
+          delayMicroseconds(300);
+          digitalWrite(clk_pos_1, HIGH);
+          delayMicroseconds(300);
+        }
+        
+        digitalWrite(ligar_motor_1, LOW);
+        digitalWrite(en_pos_1, HIGH);
+        referenciado_1 = 1;
+    }
+  }
+}
+
+void incremento1_conmanPushCallback(void *ptr){
+    while (digitalRead(fdc_sup_1) == HIGH) {
+
+        //Serial.println("Entrou no while"); - chegou aqui ok
+          digitalWrite(cw_pos_1, LOW);//cw_pos_1 = LOW -> Motores sobem
+          digitalWrite(ligar_motor_1, HIGH);
+          
+          digitalWrite(en_pos_1, LOW);
+          //Serial.println("move motor"); chegou ok mas não está movendo o motor
+          digitalWrite(clk_pos_1, LOW);
+          delayMicroseconds(300);
+          digitalWrite(clk_pos_1, HIGH);
+          delayMicroseconds(300);
+      
+    }
+}
+
+void decremento1_conmanPushCallback(void *ptr){
+    // implementação para a função decremento1_conmanPushCallback
+}
+
+void referencia_seringa2PushCallback(void *ptr){
+    referenciado_2 = 0;
+    if (seringa2_hab){
+        while (referenciado_2 == 0){
+            while (digitalRead(fdc_sup_2) == HIGH) {
+                digitalWrite(cw_pos_2, LOW);
+                digitalWrite(ligar_motor_2, HIGH);
+                
+                digitalWrite(en_pos_2, LOW);
+                
+                digitalWrite(clk_pos_2, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_2, HIGH);
+                delayMicroseconds(300);
+            }
+
+            digitalWrite(cw_pos_2, HIGH);
+            for (int i = 0; i <= 12800; i++){
+                digitalWrite(clk_pos_2, LOW);
+                delayMicroseconds(300);
+                digitalWrite(clk_pos_2, HIGH);
+                delayMicroseconds(300);
+            }
+            
+            digitalWrite(ligar_motor_2, LOW);
+            digitalWrite(en_pos_2, HIGH);
+            referenciado_2 = 1;
+        }
+    }
+}
+
+void incremento2_conmanPushCallback(void *ptr){
+    // implementação para a função incremento2_conmanPushCallback
+}
+
+void decremento2_conmanPushCallback(void *ptr){
+    // implementação para a função decremento2_conmanPushCallback
 }
 
