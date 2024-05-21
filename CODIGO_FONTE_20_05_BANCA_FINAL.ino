@@ -72,20 +72,20 @@ NexTouch *nex_listen_list[] = {
 };
 
 // Definindo as portas a serem utilizadas para o fuso 1 e os seus respectivos nomes
-    const int clk_pos_1 = PC2;
-    const int cw_pos_1 = PC3;
-    const int en_pos_1 = PC1;
-    const int ligar_motor_1 = PC0;
-    const int fdc_sup_1 = PC7;
-    const int fdc_inf_1 = PB6;
+    const int clk_pos_2 = PC2;
+    const int cw_pos_2 = PC3;
+    const int en_pos_2 = PC1;
+    const int ligar_motor_2 = PC0;
+    const int fdc_sup_2 = PC7;
+    const int fdc_inf_2 = PB6;
 
 // Definindo as portas a serem utilizadas para o fuso 2 e os seus respectivos nomes
-    const int clk_pos_2 = PA4;
-    const int cw_pos_2 = PB0;
-    const int en_pos_2 = PA0;
-    const int ligar_motor_2 = PA1;
-    const int fdc_sup_2 = PA7;
-    const int fdc_inf_2 = PA6;
+    const int clk_pos_1 = PA4;
+    const int cw_pos_1 = PB0;
+    const int en_pos_1 = PA0;
+    const int ligar_motor_1 = PA1;
+    const int fdc_sup_1 = PA7;
+    const int fdc_inf_1 = PA6;
 
 //Adicionando as variáveis do sensor de temperatura
     Adafruit_TMP117  tmp117;
@@ -526,8 +526,8 @@ void decremento1PopCallback(void *ptr) {
     if (seringa1_hab) {
         vazao_1--;
         
-        if (vazao_1 < 0) {
-            vazao_1 = 0;
+        if (vazao_1 < 10) {
+            vazao_1 = 10;
             }
         
         dtostrf(vazao_1, 2, 0, buffer);
@@ -553,8 +553,8 @@ void decremento2PopCallback(void *ptr) {
     if (seringa2_hab) {
         vazao_2--;
         
-        if (vazao_2 < 0) {
-            vazao_2 = 0;
+        if (vazao_2 < 10) {
+            vazao_2 = 10;
         }
         
         dtostrf(vazao_2, 2, 0, buffer);
