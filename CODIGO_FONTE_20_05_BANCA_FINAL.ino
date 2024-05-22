@@ -229,6 +229,14 @@ class ControlAction : public SpinTimerAction{
         temp_chamber.setText(Value2);
 
         if(AUTO == 0 ){
+          if(temp.temperature< Setpoint){
+            Output = 0.40*PWM_RESOLUTION;
+            analogWrite(TERMAL_PWM, Output);
+              }
+          else{
+          Output = 0;
+          analogWrite(TERMAL_PWM, Output);
+            }
         start = millis()/1e3;
         }
 
